@@ -1,0 +1,202 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Default shadcn colors */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    /* Green Wheels Primary */
+    --primary: 147 63% 43%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    /* Green Wheels Accent */
+    --accent: 49 89% 70%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 147 63% 43%;
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 210 12% 25%;
+    --sidebar-primary: 147 63% 43%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 49 89% 70%;
+    --sidebar-accent-foreground: 210 12% 25%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 147 63% 43%;
+  }
+
+  .dark {
+    --background: 210 12% 15%;
+    --foreground: 210 40% 98%;
+
+    --card: 210 12% 20%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 210 12% 20%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Dark mode primary remains Green Wheels green */
+    --primary: 147 63% 43%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 217.2 32.6% 25%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 25%;
+    --muted-foreground: 215 20.2% 75%;
+
+    /* Dark mode accent remains Green Wheels yellow */
+    --accent: 49 89% 70%;
+    --accent-foreground: 210 12% 25%;
+
+    --destructive: 0 62.8% 40.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 30%;
+    --input: 217.2 32.6% 25%;
+    --ring: 147 63% 43%;
+    
+    --sidebar-background: 210 12% 18%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 147 63% 43%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 49 89% 70%;
+    --sidebar-accent-foreground: 210 12% 25%;
+    --sidebar-border: 210 12% 30%;
+    --sidebar-ring: 147 63% 43%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-poppins;
+  }
+  
+  /* Better contrast for inputs in dark mode */
+  .dark input, .dark select, .dark textarea {
+    @apply bg-gray-800 border-gray-700 text-white;
+  }
+  
+  /* Better visibility for buttons in dark mode */
+  .dark button {
+    @apply text-gray-100;
+  }
+  
+  /* Improved dialog, drawer and dropdown visibility in dark mode */
+  .dark .dialog-content, 
+  .dark .drawer-content,
+  .dark .dropdown-content {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  /* Improved form labels */
+  .dark label {
+    @apply text-gray-300;
+  }
+}
+
+@layer components {
+  .dashboard-card {
+    @apply bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-graylight dark:border-gray-700 hover:shadow-lg transition-shadow duration-300;
+  }
+  
+  .status-badge {
+    @apply px-3 py-1 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 transition-colors duration-300;
+  }
+  
+  .status-available {
+    @apply bg-greenprimary/20 text-greenprimary dark:bg-greenprimary/30 dark:text-green-400;
+  }
+  
+  .status-in-use {
+    @apply bg-greenaccent/30 text-graydark dark:bg-greenaccent/40 dark:text-gray-200;
+  }
+  
+  .status-maintenance {
+    @apply bg-error/20 text-error dark:bg-error/30 dark:text-red-400;
+  }
+  
+  .pulse-on-update {
+    @apply animate-pulse;
+  }
+  
+  .form-input-animated {
+    @apply opacity-0;
+    animation: slideIn 0.3s forwards;
+    animation-delay: calc(var(--input-index, 0) * 0.1s);
+  }
+  
+  .qr-scanner-container {
+    @apply relative rounded-lg bg-graylight/50 dark:bg-gray-700/50 aspect-square max-w-md mx-auto overflow-hidden;
+  }
+  
+  .scanner-grid {
+    @apply absolute inset-0 border-2 border-dashed border-greenaccent/60 rounded-lg;
+  }
+  
+  .scanner-line {
+    @apply absolute left-0 w-full h-1 bg-greenprimary/60 animate-qr-scan;
+  }
+
+  /* Map pin styles */
+  .map-pin {
+    @apply flex items-center justify-center rounded-full h-7 w-7 bg-greenprimary text-white font-semibold text-xs shadow-lg border-2 border-white;
+  }
+
+  .map-pin.bike-pin {
+    @apply bg-greenaccent text-graydark;
+  }
+}
+
+/* Keyframes for animations */
+@keyframes qr-scan {
+  0% {
+    top: 0%;
+  }
+  50% {
+    top: 100%;
+  }
+  100% {
+    top: 0%;
+  }
+}
+
+@keyframes slideIn {
+  0% {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

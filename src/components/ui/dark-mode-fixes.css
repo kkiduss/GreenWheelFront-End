@@ -1,0 +1,52 @@
+
+/* Dark mode fixes for all components */
+.dark {
+  /* Cards */
+  .card {
+    @apply bg-gray-800 border-gray-700 shadow-none;
+  }
+  
+  /* Tables */
+  table {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  th {
+    @apply bg-gray-900 text-gray-200;
+  }
+  
+  tr {
+    @apply border-gray-700;
+  }
+  
+  td {
+    @apply text-gray-300;
+  }
+  
+  /* Station bikes collapsible */
+  .station-bikes-collapse {
+    @apply bg-gray-800 border-gray-700;
+  }
+  
+  .station-bikes-trigger {
+    @apply hover:bg-gray-700 text-gray-200;
+  }
+  
+  /* Status badges */
+  .status-badge {
+    &.available {
+      @apply bg-green-900/50 text-green-300;
+    }
+    &.in-use {
+      @apply bg-yellow-900/50 text-yellow-300;
+    }
+    &.maintenance {
+      @apply bg-red-900/50 text-red-300;
+    }
+  }
+  
+  /* Dashboard stats */
+  .stat-card {
+    @apply bg-gray-800 border-gray-700;
+  }
+}
