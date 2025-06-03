@@ -52,10 +52,10 @@ const StationMap = ({
   selectedBike, 
   onStationSelect = () => {},
   bounds = {
-    minLat: 8.9,
-    maxLat: 9.1,
-    minLng: 38.6,
-    maxLng: 38.9
+    minLat: 8.4,
+    maxLat: 8.7,
+    minLng: 39.1,
+    maxLng: 39.4
   }
 }: StationMapProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -68,8 +68,8 @@ const StationMap = ({
     [bounds.minLat, bounds.minLng],
     [bounds.maxLat, bounds.maxLng]
   ];
-  const mapCenter: [number, number] = [9.03, 38.74];
-  const zoom = 12;
+  const mapCenter: [number, number] = [8.5464, 39.2683];
+  const zoom = 13;
 
   useEffect(() => {
     if (!mapContainerRef.current) return;

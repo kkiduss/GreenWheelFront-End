@@ -1,10 +1,12 @@
 // src/api/staff.ts
 
+const API_URL = 'https://www.green-wheels.pro.et/api';
+
 export async function endTrip(tracking_code: string) {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('No authentication token found');
 
-  const response = await fetch('http://127.0.0.1:8000/api/staff/end-trip', {
+  const response = await fetch(`${API_URL}/staff/end-trip`, {
     method: 'POST',
     credentials: 'include',
     headers: {

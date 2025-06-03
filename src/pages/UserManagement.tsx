@@ -55,34 +55,49 @@ const UserManagement = () => {
   // Fetch users from backend
   useEffect(() => {
     const fetchUsers = async () => {
-      if (!authState.token) {
-        console.log('No token available');
+      // Get token from both authState and localStorage as fallback
+      const token = authState.token || localStorage.getItem('token');
+      
+      if (!token) {
+        console.error('No token available');
+        toast({
+          title: 'Error',
+          description: 'Authentication token not found. Please log in again.',
+          variant: 'destructive',
+        });
         return;
       }
 
       setIsLoading(true);
       
       try {
-        console.log('Fetching team members...');
-        const response = await fetch('http://127.0.0.1:8000/api/superadmin/all_teams', {
+        console.log('Fetching users with token:', token.substring(0, 10) + '...');
+        
+        const response = await fetch('https://www.green-wheels.pro.et/api/superadmin/all_teams', {
           method: 'GET',
+          credentials: 'include',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authState.token}`,
+            'Authorization': `Bearer ${token}`,
           },
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          console.error('API Error:', {
+            status: response.status,
+            statusText: response.statusText,
+            error: errorData
+          });
+          throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Raw API Response:', data);
+        console.log('API Response:', data);
 
         // Get the team array from the response
         const usersArray = data.team || [];
-        console.log('Users Array:', usersArray);
         
         // Map the users to our format
         const mappedUsers = usersArray
@@ -99,10 +114,10 @@ const UserManagement = () => {
               station_id: user.station_id,
               station_name: user.station_name || 'N/A',
               national_id_number: user.national_id_number || 'N/A'
-            };
+            } as TeamMember;
           });
 
-        console.log('Final mapped users:', mappedUsers);
+        console.log('Mapped Users:', mappedUsers);
 
         // Filter based on role if needed
         let finalUsers = mappedUsers;
@@ -113,7 +128,6 @@ const UserManagement = () => {
           );
         }
 
-        console.log('Setting users:', finalUsers);
         setUsers(finalUsers);
         setFilteredUsers(finalUsers);
 
@@ -121,7 +135,7 @@ const UserManagement = () => {
         console.error('Error fetching users:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load users',
+          description: error instanceof Error ? error.message : 'Failed to load users',
           variant: 'destructive',
         });
       } finally {
@@ -229,7 +243,7 @@ const UserManagement = () => {
     if (!editingUser) return;
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/superadmin/team/${editingUser.id}/update`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/superadmin/team/${editingUser.id}/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -287,7 +301,7 @@ const UserManagement = () => {
       try {
         // Delete each selected user one by one
         for (const userId of selectedUsers) {
-          const response = await fetch(`http://127.0.0.1:8000/api/admin/delete_account/${userId}`, {
+          const response = await fetch(`https://www.green-wheels.pro.et/api/admin/delete_account/${userId}`, {
             method: 'DELETE',
             headers: {
               'Content-Type': 'application/json',
@@ -307,25 +321,42 @@ const UserManagement = () => {
 
         // Refresh users
         const fetchUsers = async () => {
-          if (!authState.token) {
-            console.log('No token available');
+          // Get token from both authState and localStorage as fallback
+          const token = authState.token || localStorage.getItem('token');
+          
+          if (!token) {
+            console.error('No token available');
+            toast({
+              title: 'Error',
+              description: 'Authentication token not found. Please log in again.',
+              variant: 'destructive',
+            });
             return;
           }
 
           setIsLoading(true);
           
           try {
-            const response = await fetch('http://127.0.0.1:8000/api/superadmin/all_teams', {
+            console.log('Fetching users with token:', token.substring(0, 10) + '...');
+            
+            const response = await fetch('https://www.green-wheels.pro.et/api/superadmin/all_teams', {
               method: 'GET',
+              credentials: 'include',
               headers: {
                 'Accept': 'application/json',
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authState.token}`,
+                'Authorization': `Bearer ${token}`,
               },
             });
 
             if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
+              const errorData = await response.json().catch(() => ({}));
+              console.error('API Error:', {
+                status: response.status,
+                statusText: response.statusText,
+                error: errorData
+              });
+              throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
@@ -370,7 +401,7 @@ const UserManagement = () => {
             console.error('Error fetching users:', error);
             toast({
               title: 'Error',
-              description: 'Failed to load users',
+              description: error instanceof Error ? error.message : 'Failed to load users',
               variant: 'destructive',
             });
           } finally {

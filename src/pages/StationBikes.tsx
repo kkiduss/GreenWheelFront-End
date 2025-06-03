@@ -37,15 +37,34 @@ const StationBikes = () => {
         setLoading(true);
         setError(null);
         
-        const response = await fetch('http://127.0.0.1:8000/api/stations/2/bikes');
+        const stationId = localStorage.getItem('stationId');
+        if (!stationId) {
+          setError('No station ID found. Please log in again.');
+          return;
+        }
+
+        const response = await fetch(`https://www.green-wheels.pro.et/api/stations/${stationId}/bikes`, {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('Failed to fetch bikes:', response.status, errorText);
+          throw new Error(`Error ${response.status}: ${errorText}`);
+        }
+        
         const data = await response.json();
+        console.log('Raw API response:', data);
         
         const bikesData = data.bikes || [];
         setBikes(bikesData);
         
       } catch (err) {
         console.error('Error fetching bikes:', err);
-        setError('Failed to load bikes');
+        setError('Failed to load bikes. Please try again later.');
       } finally {
         setLoading(false);
       }

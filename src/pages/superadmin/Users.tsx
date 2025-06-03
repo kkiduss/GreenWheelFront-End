@@ -20,20 +20,38 @@ const Users = () => {
 
   // Fetch users from backend
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/superadmin/all_users', {
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': `Bearer ${authState.token}`,
-      },
-    })
-      .then(async res => {
-        if (!res.ok) {
-          const text = await res.text();
-          console.error('Users API error:', res.status, text);
-          throw new Error(`Users API error: ${res.status} ${text}`);
+    const fetchUsers = async () => {
+      try {
+        // Get token from both authState and localStorage as fallback
+        const token = authState.token || localStorage.getItem('token');
+        
+        if (!token) {
+          throw new Error('No authentication token found');
         }
-        const json = await res.json();
+
+        console.log('Fetching users with token:', token.substring(0, 10) + '...');
+
+        const response = await fetch('https://www.green-wheels.pro.et/api/superadmin/all_users', {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Users API error details:', {
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            error: errorData
+          });
+          throw new Error(`Users API error: ${response.status} ${JSON.stringify(errorData)}`);
+        }
+
+        const json = await response.json();
         console.log('Raw API Response:', json);
         
         // Get the users array from the response
@@ -61,15 +79,17 @@ const Users = () => {
         console.log('Mapped Users:', mapped);
         setUsers(mapped);
         setFilteredUsers(mapped);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('Error fetching users:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load users. Please try again.',
+          description: error instanceof Error ? error.message : 'Failed to load users. Please try again.',
           variant: 'destructive',
         });
-      });
+      }
+    };
+
+    fetchUsers();
   }, [authState.token, toast]);
 
   // Filter users based on search

@@ -4,8 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import DashboardCard from '@/components/ui/dashboard-card';
 import BikeStatusBadge from '@/components/ui/bike-status-badge';
 import { useAuth } from '@/contexts/AuthContext';
-import { bikes, mockUsers, stations, getBikeSummary, getStationSummary, getMaintenanceSummary, getActiveBikes } from '@/data/mockData';
-import { Bike as BikeType } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -24,103 +22,14 @@ const AdminDashboard = () => {
     activeTrips: 0,
     reservedBikes: 0
   });
-  const [stationSummary, setStationSummary] = useState(getStationSummary());
-  const [maintenanceSummary, setMaintenanceSummary] = useState(getMaintenanceSummary());
-  
-  // Limit the bike list to 100 bikes
-  const reducedBikes = bikes.slice(0, 100);
-  const [bikeList, setBikeList] = useState<BikeType[]>(reducedBikes);
-  const [filteredBikes, setFilteredBikes] = useState<BikeType[]>(reducedBikes);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [loading, setLoading] = useState(false);
   const [recentReports, setRecentReports] = useState<MaintenanceReport[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
   const [filteredReservations, setFilteredReservations] = useState<any[]>([]);
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
-  // Fetch maintenance reports
-  useEffect(() => {
-    const fetchMaintenanceReports = async () => {
-      try {
-        setLoading(true);
-        console.log('Fetching maintenance reports...');
-        const response = await fetch('http://127.0.0.1:8000/api/bike/maintenance', {
-          headers: {
-            'Authorization': `Bearer ${authState.token}`,
-            'Accept': 'application/json',
-          },
-        });
-
-        console.log('Response status:', response.status);
-        const data = await response.json();
-        console.log('Raw maintenance data:', data);
-
-        // Transform the API response to match our MaintenanceReport type
-        const reports = Array.isArray(data) ? data : data.reports || data.data || [];
-        console.log('Extracted reports:', reports);
-
-        const transformedReports = reports.map((report: any) => {
-          console.log('Processing report:', report);
-          return {
-            id: report.id?.toString() || Math.random().toString(),
-            bikeId: report.bike_id || report.bikeId || 'Unknown Bike',
-            stationId: report.station_id || report.stationId,
-            stationName: report.station_name || report.stationName || 'Unknown Station',
-            issue: report.issue || report.description || 'No issue description',
-            priority: report.priority || 'medium',
-            status: report.status || 'pending',
-            reportedAt: report.reported_at || report.reportedAt || new Date().toISOString(),
-            resolvedAt: report.resolved_at || report.resolvedAt,
-            notes: report.notes || '',
-            bike_number: report.bike_number || '',
-            reason: report.reason || '',
-            description: report.description || '',
-            reported_by: report.reported_by || '',
-            phone_number: report.phone_number || '',
-            maintenance_status: report.maintenance_status || 'pending',
-            role: report.role || 'staff'
-          };
-        });
-
-        console.log('Transformed reports:', transformedReports);
-
-        // Sort by priority first (high to low), then by reported date (most recent first)
-        transformedReports.sort((a: MaintenanceReport, b: MaintenanceReport) => {
-          const priorityOrder = { high: 0, medium: 1, low: 2 };
-          const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 1) - 
-                             (priorityOrder[b.priority as keyof typeof priorityOrder] || 1);
-          
-          if (priorityDiff !== 0) return priorityDiff;
-          
-          return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime();
-        });
-
-        console.log('Sorted reports:', transformedReports);
-        setRecentReports(transformedReports);
-      } catch (error) {
-        console.error('Error fetching maintenance reports:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load maintenance reports',
-          variant: 'destructive',
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    // Initial fetch
-    fetchMaintenanceReports();
-
-    // Set up interval for live updates every 30 seconds
-    const intervalId = setInterval(fetchMaintenanceReports, 30000);
-
-    // Cleanup interval on component unmount
-    return () => clearInterval(intervalId);
-  }, [authState.token, toast]);
 
   // Fetch bike summary data
   useEffect(() => {
@@ -128,7 +37,7 @@ const AdminDashboard = () => {
       try {
         setLoading(true);
         console.log('Fetching bike summary...');
-        const response = await fetch('http://127.0.0.1:8000/api/superadmin/revenue/bike-summary', {
+        const response = await fetch('https://www.green-wheels.pro.et/api/superadmin/revenue/bike-summary', {
           headers: {
             'Authorization': `Bearer ${authState.token}`,
             'Accept': 'application/json',
@@ -140,19 +49,16 @@ const AdminDashboard = () => {
         console.log('Bike summary data:', data);
 
         if (response.ok) {
-          // Get active bikes from both API and mock data
-          const activeBikes = getActiveBikes();
           const apiActiveBikes = data.active_bikes || 0;
-          console.log('Active bikes from mock:', activeBikes.length);
           console.log('Active bikes from API:', apiActiveBikes);
 
           setBikeSummary({
             totalBikes: data.total_bikes || 0,
             availableBikes: data.available_bikes || 0,
-            inUseBikes: apiActiveBikes || activeBikes.length || 0,
+            inUseBikes: apiActiveBikes,
             totalRevenue: data.total_revenue || 0,
             todayRevenue: data.today_revenue || 0,
-            activeTrips: apiActiveBikes || activeBikes.length || 0,
+            activeTrips: apiActiveBikes,
             reservedBikes: data.reserved_bikes || 0
           });
         } else {
@@ -180,42 +86,13 @@ const AdminDashboard = () => {
     return () => clearInterval(intervalId);
   }, [authState.token, toast]);
 
-  // Filter bikes based on search and status filter
+  // Fetch maintenance reports
   useEffect(() => {
-    let results = reducedBikes;
-    
-    // Apply status filter
-    if (statusFilter !== 'all') {
-      results = results.filter(bike => bike.status === statusFilter);
-    }
-    
-    // Apply search term filter
-    if (searchTerm) {
-      const lowercasedFilter = searchTerm.toLowerCase();
-      results = results.filter(
-        bike => 
-          bike.id.toLowerCase().includes(lowercasedFilter) ||
-          bike.model.toLowerCase().includes(lowercasedFilter)
-      );
-    }
-    
-    setFilteredBikes(results);
-    setCurrentPage(1); // Reset to first page when filters change
-  }, [searchTerm, statusFilter]);
-
-  // Paginate bikes
-  const indexOfLastBike = currentPage * itemsPerPage;
-  const indexOfFirstBike = indexOfLastBike - itemsPerPage;
-  const currentBikes = filteredBikes.slice(indexOfFirstBike, indexOfLastBike);
-  const totalPages = Math.ceil(filteredBikes.length / itemsPerPage);
-
-  // Fetch reservations
-  useEffect(() => {
-    const fetchReservations = async () => {
+    const fetchMaintenanceReports = async () => {
       try {
         setLoading(true);
-        console.log('Fetching reservations...');
-        const response = await fetch('http://127.0.0.1:8000/api/bike/reserved', {
+        console.log('Fetching maintenance reports...');
+        const response = await fetch('https://www.green-wheels.pro.et/api/bike/maintenance', {
           headers: {
             'Authorization': `Bearer ${authState.token}`,
             'Accept': 'application/json',
@@ -224,20 +101,111 @@ const AdminDashboard = () => {
 
         console.log('Response status:', response.status);
         const data = await response.json();
+        console.log('Raw maintenance data:', data);
+
+        // Transform the API response to match our MaintenanceReport type
+        const reports = Array.isArray(data) ? data : data.reports || data.data || [];
+        console.log('Extracted reports:', reports);
+
+        const transformedReports = reports.map((report: any) => ({
+          id: report.id?.toString() || Math.random().toString(),
+          bikeId: report.bike_id || report.bikeId || 'Unknown Bike',
+          stationId: report.station_id || report.stationId,
+          stationName: report.station_name || report.stationName || 'Unknown Station',
+          issue: report.issue || report.description || 'No issue description',
+          priority: report.priority || 'medium',
+          status: report.status || 'pending',
+          reportedAt: report.reported_at || report.reportedAt || new Date().toISOString(),
+          resolvedAt: report.resolved_at || report.resolvedAt,
+          notes: report.notes || '',
+          bike_number: report.bike_number || '',
+          reason: report.reason || '',
+          description: report.description || '',
+          reported_by: report.reported_by || '',
+          phone_number: report.phone_number || '',
+          maintenance_status: report.maintenance_status || 'pending',
+          role: report.role || 'staff'
+        }));
+
+        // Sort by priority first (high to low), then by reported date (most recent first)
+        transformedReports.sort((a: MaintenanceReport, b: MaintenanceReport) => {
+          const priorityOrder = { high: 0, medium: 1, low: 2 };
+          const priorityDiff = (priorityOrder[a.priority as keyof typeof priorityOrder] || 1) - 
+                             (priorityOrder[b.priority as keyof typeof priorityOrder] || 1);
+          
+          if (priorityDiff !== 0) return priorityDiff;
+          
+          return new Date(b.reportedAt).getTime() - new Date(a.reportedAt).getTime();
+        });
+
+        setRecentReports(transformedReports);
+      } catch (error) {
+        console.error('Error fetching maintenance reports:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load maintenance reports',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Initial fetch
+    fetchMaintenanceReports();
+
+    // Set up interval for live updates every 30 seconds
+    const intervalId = setInterval(fetchMaintenanceReports, 30000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(intervalId);
+  }, [authState.token, toast]);
+
+  // Fetch reservations
+  useEffect(() => {
+    const fetchReservations = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching reservations...');
+        const response = await fetch('https://www.green-wheels.pro.et/api/bike/reserved', {
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${authState.token}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        });
+
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
         console.log('Raw reservations data:', data);
 
-        const reservationsData = Array.isArray(data) ? data : data.reservations || data.data || [];
-        console.log('Processed reservations:', reservationsData);
+        // Handle different response structures
+        let reservationsData = [];
+        if (data.bikes && Array.isArray(data.bikes)) {
+          reservationsData = data.bikes;
+        } else if (Array.isArray(data)) {
+          reservationsData = data;
+        } else if (data.data && Array.isArray(data.data)) {
+          reservationsData = data.data;
+        }
 
+        console.log('Processed reservations:', reservationsData);
         setReservations(reservationsData);
         setFilteredReservations(reservationsData);
       } catch (error) {
         console.error('Error fetching reservations:', error);
         toast({
           title: 'Error',
-          description: 'Failed to load reservations',
+          description: 'Failed to load reservations. Please try again later.',
           variant: 'destructive',
         });
+        setReservations([]);
+        setFilteredReservations([]);
       } finally {
         setLoading(false);
       }
@@ -264,9 +232,9 @@ const AdminDashboard = () => {
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       results = results.filter(reservation => 
-        reservation.bike_id?.toLowerCase().includes(term) ||
-        reservation.user_id?.toLowerCase().includes(term) ||
-        reservation.station_id?.toLowerCase().includes(term)
+        reservation.bike_number?.toLowerCase().includes(term) ||
+        reservation.model?.toLowerCase().includes(term) ||
+        reservation.brand?.toLowerCase().includes(term)
       );
     }
     
@@ -312,15 +280,6 @@ const AdminDashboard = () => {
       default:
         break;
     }
-  };
-
-  // Handle export to CSV
-  const handleExportCSV = () => {
-    toast({
-      title: 'Report Exported',
-      description: 'CSV file downloaded successfully',
-      variant: 'default',
-    });
   };
 
   return (
@@ -387,7 +346,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Replace Bike Inventory Table with Reservations Table */}
+      {/* Reservations Table */}
       <div className="bg-white rounded-lg shadow p-6 animate-fade-in">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
           <h2 className="text-xl font-semibold text-graydark">Active Reservations</h2>
@@ -405,9 +364,8 @@ const AdminDashboard = () => {
               className="px-3 py-2 rounded-md border border-input bg-background text-graydark"
             >
               <option value="all">All Statuses</option>
-              <option value="active">Active</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="reserved">Reserved</option>
+              <option value="available">Available</option>
             </select>
           </div>
         </div>
@@ -417,19 +375,22 @@ const AdminDashboard = () => {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-graydark uppercase tracking-wider">
-                  Reservation ID
+                  Bike Number
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-graydark uppercase tracking-wider">
-                  Bike ID
+                  Model
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-graydark uppercase tracking-wider">
-                  User ID
+                  Brand
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-graydark uppercase tracking-wider">
-                  Start Time
+                  Station ID
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-graydark uppercase tracking-wider">
                   Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-graydark uppercase tracking-wider">
+                  Last Updated
                 </th>
               </tr>
             </thead>
@@ -437,31 +398,34 @@ const AdminDashboard = () => {
               {currentItems.map((reservation) => (
                 <tr key={reservation.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-graydark">
-                    {reservation.id}
+                    #{reservation.bike_number}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark">
-                    {reservation.bike_id}
+                    {reservation.model}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark">
-                    {reservation.user_id}
+                    {reservation.brand}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark">
-                    {new Date(reservation.start_time).toLocaleString()}
+                    Station {reservation.station_id}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm">
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                      ${reservation.status === 'active' ? 'bg-green-100 text-green-800' : 
-                        reservation.status === 'completed' ? 'bg-blue-100 text-blue-800' : 
-                        'bg-red-100 text-red-800'}`}
+                      ${reservation.status === 'reserved' ? 'bg-blue-100 text-blue-800' : 
+                        reservation.status === 'available' ? 'bg-green-100 text-green-800' : 
+                        'bg-yellow-100 text-yellow-800'}`}
                     >
                       {reservation.status.charAt(0).toUpperCase() + reservation.status.slice(1)}
                     </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-graydark">
+                    {new Date(reservation.updated_at).toLocaleString()}
                   </td>
                 </tr>
               ))}
               {currentItems.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
                     No reservations found
                   </td>
                 </tr>

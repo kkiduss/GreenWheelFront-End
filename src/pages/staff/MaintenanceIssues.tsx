@@ -43,7 +43,7 @@ const MaintenanceIssues = () => {
 
   // Update fetch maintenance reports
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/bike/maintenance', {
+    fetch('https://www.green-wheels.pro.et/api/bike/maintenance', {
       credentials: 'include',
       headers: getAuthHeaders(),
     })
@@ -118,7 +118,7 @@ const MaintenanceIssues = () => {
 
   // Update fetch maintenance issue types
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/maintenance_type', {
+    fetch('https://www.green-wheels.pro.et/api/maintenance_type', {
       credentials: 'include',
       headers: getAuthHeaders(),
     })
@@ -147,7 +147,7 @@ const MaintenanceIssues = () => {
 
   const handleNewIssue = async (data: any) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/staff/report-issue', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/staff/report-issue', {
         method: 'POST',
         credentials: 'include',
         headers: getAuthHeaders(),
@@ -188,7 +188,7 @@ const MaintenanceIssues = () => {
       form.reset();
 
       // Refresh the maintenance reports after successful submission
-      const updatedResponse = await fetch('http://127.0.0.1:8000/api/bike/maintenance', {
+      const updatedResponse = await fetch('https://www.green-wheels.pro.et/api/bike/maintenance', {
         credentials: 'include',
         headers: getAuthHeaders(),
       });
@@ -219,7 +219,7 @@ const MaintenanceIssues = () => {
 
   const handleNewIssueType = async (data: any) => {
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/maintenance/add_issue_type', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/maintenance/add_issue_type', {
         method: 'POST',
         credentials: 'include',
         headers: getAuthHeaders(),
@@ -241,7 +241,7 @@ const MaintenanceIssues = () => {
       }
 
       // Refresh issue types
-      const updatedResponse = await fetch('http://127.0.0.1:8000/api/maintenance_type', {
+      const updatedResponse = await fetch('https://www.green-wheels.pro.et/api/maintenance_type', {
         credentials: 'include',
         headers: getAuthHeaders(),
       });

@@ -4,65 +4,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { getUserById } from '@/data/mockData';
-import { Bike as BikeIcon, MapPin, Search, Wrench, Car } from 'lucide-react';
-import StationMap, { StationMapLocation } from '@/components/StationMap';
+import { Bike as BikeIcon } from 'lucide-react';
 import { endTrip } from "@/api/staff";
+import TripReceiptStaff from '@/components/TripReceiptStaff';
+import SummaryDialog from '@/components/SummaryDialog';
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog";
 
 const StaffPanel = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [stations, setStations] = useState<any[]>([]);
-  const [bikes, setBikes] = useState<any[]>([]);
   const [reservations, setReservations] = useState<any[]>([]);
-
   const [reservationCode, setReservationCode] = useState('');
   const [endTripCode, setEndTripCode] = useState('');
   const [bikeDetails, setBikeDetails] = useState<any>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isEndingTrip, setIsEndingTrip] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<any>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [endTripError, setEndTripError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [currentTrip, setCurrentTrip] = useState<any>(null);
+  const [showSummary, setShowSummary] = useState(false);
+  const [summaryData, setSummaryData] = useState<any>(null);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/stations', {
-      credentials: 'include',
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(async res => {
-        if (!res.ok) return;
-        try {
-          const data = await res.json();
-          const stationsArr = Array.isArray(data) ? data : data.stations || [];
-          setStations(stationsArr);
-          if (stationsArr.length > 0) setSelectedStation(stationsArr[0]);
-        } catch {
-          setStations([]);
-        }
-      });
-  }, []);
-
-  useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/bikes', {
-      credentials: 'include',
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(async res => {
-        if (!res.ok) return;
-        try {
-          const data = await res.json();
-          const bikesArr = Array.isArray(data) ? data : data.bikes || [];
-          setBikes(bikesArr);
-        } catch {
-          setBikes([]);
-        }
-      });
-  }, []);
-
-  useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/reservations', {
+    fetch('https://www.green-wheels.pro.et/api/reservations', {
       credentials: 'include',
       headers: { 'Accept': 'application/json' },
     })
@@ -78,35 +47,6 @@ const StaffPanel = () => {
       });
   }, []);
 
-  // Fetch active bikes from backend API
-  useEffect(() => {
-    fetch('http://127.0.0.1:8000/api/bikes/1/available', {
-      credentials: 'include',
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(async res => {
-        if (!res.ok) return;
-        try {
-          const data = await res.json();
-          // Expecting an array of bikes with latitude/longitude and status === 'in-use'
-          if (Array.isArray(data)) {
-            // Merge with bikes state if needed, or use separately for map
-            // Example: setActiveBikes(data);
-            // For now, just log for debugging:
-            console.log('Active bikes from API:', data);
-          }
-        } catch {
-          // Ignore parse errors
-        }
-      });
-  }, []);
-
-  const stationBikes = bikes.filter(bike => bike.station_id === selectedStation?.id);
-  const filteredBikes = stationBikes.filter(bike => 
-    bike.model.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    bike.id.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-  
   const handleVerifyCode = async () => {
     if (!reservationCode.trim()) {
       setErrorMessage('Please enter a reservation code');
@@ -142,7 +82,7 @@ const StaffPanel = () => {
       // Debug: log payload before sending
       console.log('Sending payload:', payload);
 
-      const res = await fetch('http://127.0.0.1:8000/api/staff/verify-trip', {
+      const res = await fetch('https://www.green-wheels.pro.et/api/staff/verify-trip', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -236,7 +176,7 @@ const StaffPanel = () => {
       // Debug: log payload before sending
       console.log('Sending end-trip payload:', payload);
 
-      const res = await fetch('http://127.0.0.1:8000/api/staff/end-trip', {
+      const res = await fetch('https://www.green-wheels.pro.et/api/staff/end-trip', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -267,58 +207,375 @@ const StaffPanel = () => {
           variant: 'destructive',
         });
         setEndTripError(data?.message || 'Invalid code or trip not active. Please check and try again.');
-      } else {
-        const tripId = data?.trip?.id || data?.id;
-        toast({
-          title: 'Trip Ended Successfully',
-          description: `Trip ID: ${tripId} - ${typeof data === 'string' ? data : (data?.message || 'Trip ended successfully')}`,
-          variant: 'default',
-        });
-        // Poll trip status
-        if (tripId) {
-          let isPolling = true;
-          const checkTripStatus = async () => {
-            if (!isPolling) return;
-            try {
-              const response = await fetch(`http://127.0.0.1:8000/api/check_payment_status/${tripId}`, {
+        setIsEndingTrip(false);
+        return;
+      }
+
+      const tripId = data?.trip?.id || data?.id;
+      toast({
+        title: 'Trip Ended Successfully',
+        description: `Trip ID: ${tripId} - ${typeof data === 'string' ? data : (data?.message || 'Trip ended successfully')}`,
+        variant: 'default',
+      });
+
+      // Poll for payment ID
+      let isPollingPaymentId = true;
+      let paymentId = null;
+      let pollCount = 0;
+      const maxPolls = 12; // 1 minute maximum (5 seconds * 12)
+
+      const checkPaymentId = async () => {
+        if (!isPollingPaymentId || pollCount >= maxPolls) return;
+        
+        try {
+          const paymentIdRes = await fetch(`https://www.green-wheels.pro.et/api/staff/trip/get-payment-id/${tripId}`, {
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+
+          if (paymentIdRes.ok) {
+            const paymentIdData = await paymentIdRes.json();
+            if (paymentIdData.payment_id) {
+              paymentId = paymentIdData.payment_id;
+              isPollingPaymentId = false;
+
+              // Get payment method using the payment ID
+              const paymentMethodRes = await fetch(`https://www.green-wheels.pro.et/api/staff/trip/${paymentId}/payment-method`, {
                 credentials: 'include',
-                headers: { 'Accept': 'application/json' },
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
               });
-              if (response.ok) {
-                const tripData = await response.json();
-                console.log('Payment status response:', tripData);
-                if (tripData.status === 'completed') {
-                  isPolling = false;
+
+              if (!paymentMethodRes.ok) {
+                toast({
+                  title: 'Error',
+                  description: 'Failed to get payment method',
+                  variant: 'destructive',
+                });
+                setIsEndingTrip(false);
+                return;
+              }
+
+              const paymentMethodData = await paymentMethodRes.json();
+              const paymentMethod = paymentMethodData.payment_method;
+
+              if (paymentMethod === 'cash') {
+                // Get trip details for summary
+                const tripDetailsRes = await fetch(`https://www.green-wheels.pro.et/api/staff/trip/get-payment-id/${tripId}`, {
+                  credentials: 'include',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                  },
+                });
+
+                if (!tripDetailsRes.ok) {
                   toast({
-                    title: 'Trip Completed',
-                    description: JSON.stringify(tripData, null, 2),
-                    variant: 'default',
-                  });
-                  return;
-                } else if (tripData.status === 'failed') {
-                  isPolling = false;
-                  toast({
-                    title: 'Trip Failed',
-                    description: JSON.stringify(tripData, null, 2),
+                    title: 'Error',
+                    description: 'Failed to get trip details',
                     variant: 'destructive',
                   });
+                  setIsEndingTrip(false);
                   return;
                 }
+
+                const tripDetails = await tripDetailsRes.json();
+
+                // Show summary dialog for cash payment
+                const summaryItems = [
+                  { label: 'Trip ID', value: tripDetails.trip_id, type: 'string' },
+                  { label: 'Tracking Code', value: tripDetails.tracking_code, type: 'string' },
+                  { label: 'Bike Number', value: tripDetails.bike_number || 'N/A', type: 'string' },
+                  { label: 'User', value: `${tripDetails.first_name} ${tripDetails.last_name}`, type: 'string' },
+                  { label: 'Email', value: tripDetails.email || 'N/A', type: 'string' },
+                  { label: 'Start Time', value: tripDetails.start_time, type: 'string' },
+                  { label: 'End Time', value: tripDetails.end_time, type: 'string' },
+                  { label: 'Duration', value: tripDetails.duration, type: 'string' },
+                  { label: 'Amount', value: tripDetails.price, type: 'number' }
+                ];
+
+                setSummaryData({
+                  title: 'Cash Payment Summary',
+                  description: 'Please confirm the trip details and collect cash payment',
+                  summary: summaryItems,
+                  type: 'success',
+                  confirmText: 'Confirm Payment',
+                  onConfirm: async () => {
+                    try {
+                      // Confirm cash payment
+                      const confirmRes = await fetch(`https://www.green-wheels.pro.et/api/staff/confirm_cash_payment/${paymentId}`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'Authorization': `Bearer ${token}`,
+                        },
+                      });
+
+                      if (!confirmRes.ok) {
+                        toast({
+                          title: 'Error',
+                          description: 'Failed to confirm cash payment',
+                          variant: 'destructive',
+                        });
+                        return;
+                      }
+
+                      // Show success message
+                      toast({
+                        title: 'Payment Confirmed',
+                        description: 'Cash payment has been confirmed successfully',
+                        variant: 'default',
+                      });
+
+                      // Set trip details for receipt
+                      setCurrentTrip({
+                        id: tripDetails.trip_id,
+                        tracking_code: tripDetails.tracking_code,
+                        bike_number: tripDetails.bike_number || 'N/A',
+                        user_name: `${tripDetails.first_name} ${tripDetails.last_name}`,
+                        start_time: tripDetails.start_time,
+                        end_time: tripDetails.end_time,
+                        duration: tripDetails.duration,
+                        price: tripDetails.price,
+                        status: 'completed',
+                        payment_type: 'Cash'
+                      });
+
+                      // Show receipt and cleanup
+                      setShowReceipt(true);
+                      setShowSummary(false);
+                      setEndTripCode('');
+                      setIsEndingTrip(false);
+                    } catch (error) {
+                      console.error('Error confirming cash payment:', error);
+                      toast({
+                        title: 'Error',
+                        description: 'Failed to confirm cash payment',
+                        variant: 'destructive',
+                      });
+                    }
+                  }
+                });
+                setShowSummary(true);
+              } else if (paymentMethod === 'chapa') {
+                // For Chapa payments, check payment status first
+                const statusRes = await fetch(`https://www.green-wheels.pro.et/api/check_payment_status/${tripId}`, {
+                  credentials: 'include',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                  },
+                });
+
+                if (!statusRes.ok) {
+                  toast({
+                    title: 'Error',
+                    description: 'Failed to check payment status',
+                    variant: 'destructive',
+                  });
+                  setIsEndingTrip(false);
+                  return;
+                }
+
+                const statusData = await statusRes.json();
+                console.log('Initial payment status:', statusData); // Debug log
+                
+                if (statusData.status === 'completed') {
+                  // Get trip details for receipt
+                  const tripDetailsRes = await fetch(`https://www.green-wheels.pro.et/api/staff/trip/get-payment-id/${tripId}`, {
+                    credentials: 'include',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Accept': 'application/json',
+                      'Authorization': `Bearer ${token}`,
+                    },
+                  });
+
+                  if (!tripDetailsRes.ok) {
+                    toast({
+                      title: 'Error',
+                      description: 'Failed to get trip details',
+                      variant: 'destructive',
+                    });
+                    setIsEndingTrip(false);
+                    return;
+                  }
+
+                  const tripDetails = await tripDetailsRes.json();
+
+                  const formattedTrip = {
+                    id: tripDetails.trip_id,
+                    tracking_code: tripDetails.tracking_code,
+                    bike_number: tripDetails.bike_number || 'N/A',
+                    user_name: `${tripDetails.first_name} ${tripDetails.last_name}`,
+                    start_time: tripDetails.start_time,
+                    end_time: tripDetails.end_time,
+                    duration: tripDetails.duration,
+                    price: tripDetails.price,
+                    status: 'completed',
+                    payment_type: 'Chapa'
+                  };
+                  setCurrentTrip(formattedTrip);
+                  setShowReceipt(true);
+                  setEndTripCode('');
+                  setIsEndingTrip(false);
+                } else if (statusData.status === 'payment_pending') {
+                  toast({
+                    title: 'Payment Pending',
+                    description: 'Waiting for payment confirmation...',
+                    variant: 'default',
+                  });
+                  
+                  // Start polling for payment status
+                  let isPollingStatus = true;
+                  let pollCount = 0;
+                  const maxPolls = 24; // 2 minutes maximum (5 seconds * 24)
+
+                  const checkPaymentStatus = async () => {
+                    if (!isPollingStatus || pollCount >= maxPolls) {
+                      if (pollCount >= maxPolls) {
+                        toast({
+                          title: 'Timeout',
+                          description: 'Payment confirmation timed out. Please check payment status manually.',
+                          variant: 'destructive',
+                        });
+                        setIsEndingTrip(false);
+                      }
+                      return;
+                    }
+
+                    try {
+                      const response = await fetch(`https://www.green-wheels.pro.et/api/check_payment_status/${tripId}`, {
+                        credentials: 'include',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Accept': 'application/json',
+                          'Authorization': `Bearer ${token}`,
+                        },
+                      });
+
+                      if (response.ok) {
+                        const paymentData = await response.json();
+                        console.log('Payment status check:', paymentData); // Debug log
+                        
+                        if (paymentData.status === 'completed') {
+                          isPollingStatus = false;
+                          // Get trip details for receipt
+                          const tripDetailsRes = await fetch(`https://www.green-wheels.pro.et/api/staff/trip/get-payment-id/${tripId}`, {
+                            credentials: 'include',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Accept': 'application/json',
+                              'Authorization': `Bearer ${token}`,
+                            },
+                          });
+
+                          if (!tripDetailsRes.ok) {
+                            toast({
+                              title: 'Error',
+                              description: 'Failed to get trip details',
+                              variant: 'destructive',
+                            });
+                            setIsEndingTrip(false);
+                            return;
+                          }
+
+                          const tripDetails = await tripDetailsRes.json();
+
+                          const formattedTrip = {
+                            id: tripDetails.trip_id,
+                            tracking_code: tripDetails.tracking_code,
+                            bike_number: tripDetails.bike_number || 'N/A',
+                            user_name: `${tripDetails.first_name} ${tripDetails.last_name}`,
+                            start_time: tripDetails.start_time,
+                            end_time: tripDetails.end_time,
+                            duration: tripDetails.duration,
+                            price: tripDetails.price,
+                            status: 'completed',
+                            payment_type: 'Chapa'
+                          };
+                          setCurrentTrip(formattedTrip);
+                          setShowReceipt(true);
+                          setEndTripCode('');
+                          setIsEndingTrip(false);
+                        } else if (paymentData.status === 'payment_pending') {
+                          pollCount++;
+                          if (isPollingStatus) {
+                            setTimeout(checkPaymentStatus, 5000);
+                          }
+                        } else if (paymentData.status === 'failed') {
+                          isPollingStatus = false;
+                          toast({
+                            title: 'Payment Failed',
+                            description: 'Payment processing failed. Please try again.',
+                            variant: 'destructive',
+                          });
+                          setIsEndingTrip(false);
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Error checking payment status:', error);
+                      isPollingStatus = false;
+                      toast({
+                        title: 'Error',
+                        description: 'Failed to check payment status',
+                        variant: 'destructive',
+                      });
+                      setIsEndingTrip(false);
+                    }
+                  };
+
+                  checkPaymentStatus();
+                } else if (statusData.status === 'failed') {
+                  toast({
+                    title: 'Payment Failed',
+                    description: 'Payment processing failed. Please try again.',
+                    variant: 'destructive',
+                  });
+                  setIsEndingTrip(false);
+                }
               }
-              if (isPolling) {
-                setTimeout(checkTripStatus, 5000);
-              }
-            } catch (error) {
-              console.error('Error checking trip status:', error);
-              if (isPolling) {
-                setTimeout(checkTripStatus, 5000);
-              }
+              return;
             }
-          };
-          checkTripStatus();
+          }
+          
+          pollCount++;
+          if (isPollingPaymentId && pollCount < maxPolls) {
+            setTimeout(checkPaymentId, 5000);
+          } else {
+            toast({
+              title: 'Timeout',
+              description: 'Payment ID not received. Please try again.',
+              variant: 'destructive',
+            });
+            setIsEndingTrip(false);
+          }
+        } catch (error) {
+          console.error('Error checking payment ID:', error);
+          isPollingPaymentId = false;
+          toast({
+            title: 'Error',
+            description: 'Failed to check payment ID',
+            variant: 'destructive',
+          });
+          setIsEndingTrip(false);
         }
-        setEndTripCode('');
-      }
+      };
+
+      // Start polling for payment ID
+      checkPaymentId();
+      setEndTripCode('');
     } catch (error) {
       setEndTripError('Network error. Please try again.');
       toast({
@@ -326,47 +583,7 @@ const StaffPanel = () => {
         description: 'Network error',
         variant: 'destructive',
       });
-    }
-
-    setIsEndingTrip(false);
-  };
-  
-  // Defensive: only map stations with valid coordinates
-  // Add active bikes as map pins
-  const activeBikeLocations: StationMapLocation[] = bikes
-    .filter(bike => bike.status === 'in-use' && bike.latitude && bike.longitude)
-    .map(bike => ({
-      id: bike.id,
-      name: `Bike ${bike.id} (${bike.model})`,
-      location: {
-        latitude: bike.latitude,
-        longitude: bike.longitude,
-      }
-    }));
-
-  const stationLocations: StationMapLocation[] = stations
-    .filter(station => station.coordinates && typeof station.coordinates.lat === 'number' && typeof station.coordinates.lng === 'number')
-    .map(station => ({
-      id: station.id,
-      name: station.name,
-      location: {
-        latitude: station.coordinates.lat,
-        longitude: station.coordinates.lng
-      }
-    }));
-
-  // Combine stations and active bikes for the map
-  const mapLocations: StationMapLocation[] = [
-    ...stationLocations,
-    ...activeBikeLocations
-  ];
-
-  const selectedStationId = selectedStation?.id;
-  
-  const handleStationSelect = (stationId: string) => {
-    const station = stations.find(s => s.id === stationId);
-    if (station) {
-      setSelectedStation(station);
+      setIsEndingTrip(false);
     }
   };
   
@@ -512,83 +729,36 @@ const StaffPanel = () => {
           </div>
         </div>
       </div>
-      
-      <div className="bg-white p-6 rounded-lg shadow-md dark:bg-gray-800 dark:text-white">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Active Bikes by Station</h2>
-          
-          <div className="flex items-center">
-            <MapPin size={18} className="mr-1 text-graydark dark:text-gray-300" />
-            <select
-              value={selectedStation?.id}
-              onChange={(e) => setSelectedStation(stations.find(s => s.id === e.target.value) || stations[0])}
-              className="border rounded p-1 text-sm focus:outline-none focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            >
-              {stations.map((station) => (
-                <option key={station.id} value={station.id}>
-                  {station.name} ({station.availableBikes} bikes)
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 h-[500px] bg-graylight rounded-lg overflow-hidden dark:bg-gray-700">
-            <StationMap 
-              stations={mapLocations} 
-              selectedStation={selectedStationId} 
-              onStationSelect={handleStationSelect} 
-            />
-          </div>
 
-          <div className="lg:col-span-1 max-h-[500px] overflow-y-auto pr-2">
-            <div className="flex items-center gap-2 mb-3">
-              <Search size={16} />
-              <Input 
-                placeholder="Search bikes..." 
-                className="text-sm" 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            
-            {filteredBikes.length > 0 ? (
-              <ul className="space-y-2">
-                {filteredBikes.map((bike) => (
-                  <li key={bike.id} className="p-3 bg-graylight rounded-md hover:bg-graylight/80 cursor-pointer dark:bg-gray-700 dark:hover:bg-gray-600">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{bike.model}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">ID: {bike.id}</p>
-                      </div>
-                      {bike.category === 'scooter' ? (
-                        <Car className="text-graydark dark:text-gray-300" size={20} />
-                      ) : (
-                        <BikeIcon className="text-graydark dark:text-gray-300" size={20} />
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-xs">{bike.category}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                        ${bike.status === 'available' ? 'bg-greenprimary/20 text-greenprimary dark:bg-greenprimary/40 dark:text-white' : 
-                          bike.status === 'in-use' ? 'bg-greenaccent/30 text-graydark dark:bg-greenaccent/50 dark:text-white' : 
-                          'bg-error/20 text-error dark:bg-error/50 dark:text-white'}`}
-                      >
-                        {bike.status.replace('-', ' ')}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                No bikes found for your search
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Add Receipt Dialog */}
+      <Dialog open={showReceipt} onOpenChange={setShowReceipt}>
+        <DialogContent className="max-w-2xl">
+          {currentTrip && (
+            <TripReceiptStaff
+              trip={currentTrip}
+              onClose={() => setShowReceipt(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Summary Dialog */}
+      <Dialog open={showSummary} onOpenChange={setShowSummary}>
+        <DialogContent className="max-w-2xl">
+          {summaryData && (
+            <SummaryDialog
+              isOpen={showSummary}
+              title={summaryData.title}
+              description={summaryData.description}
+              summary={summaryData.summary}
+              type={summaryData.type}
+              confirmText={summaryData.confirmText}
+              onConfirm={summaryData.onConfirm}
+              onClose={() => setShowSummary(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

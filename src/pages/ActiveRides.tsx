@@ -34,11 +34,11 @@ interface BikeLocation {
   user_email?: string;
 }
 
-const ADDIS_BOUNDS = {
-  minLat: 8.9,
-  maxLat: 9.1,
-  minLng: 38.6,
-  maxLng: 38.9
+const ADAMA_BOUNDS = {
+  minLat: 8.4,  // South of Adama
+  maxLat: 8.7,  // North of Adama
+  minLng: 39.1, // West of Adama
+  maxLng: 39.4  // East of Adama
 };
 
 const ActiveRides = () => {
@@ -54,18 +54,38 @@ const ActiveRides = () => {
   const [useMockData, setUseMockData] = useState(true);
 
   const generateMockLocation = useCallback((stationId: string): BikeLocation => {
+    // Base coordinates for Adama
+    const baseLat = 8.5464;
+    const baseLng = 39.2683;
+    
+    // Generate larger variations (±0.01 degrees, roughly 1km)
+    const latVariation = (Math.random() - 0.5) * 0.02;
+    const lngVariation = (Math.random() - 0.5) * 0.02;
+    
+    // Add a directional component to simulate movement in a general direction
+    const directionLat = Math.sin(Date.now() / 10000) * 0.01;
+    const directionLng = Math.cos(Date.now() / 10000) * 0.01;
+    
+    // Calculate new coordinates with both random and directional variations
+    const newLat = baseLat + latVariation + directionLat;
+    const newLng = baseLng + lngVariation + directionLng;
+    
+    // Ensure coordinates stay within Adama bounds
+    const clampedLat = Math.min(Math.max(newLat, ADAMA_BOUNDS.minLat), ADAMA_BOUNDS.maxLat);
+    const clampedLng = Math.min(Math.max(newLng, ADAMA_BOUNDS.minLng), ADAMA_BOUNDS.maxLng);
+
     return {
       bike_number: `MOCK-${stationId}`,
-      latitude: 8.9806,
-      longitude: 38.7578,
+      latitude: clampedLat,
+      longitude: clampedLng,
       updated_at: new Date().toISOString()
     };
-  }, [bikeLocations]);
+  }, []);
 
   const fetchRealBikeLocation = useCallback(async (tripId: number, bikeNumber: string) => {
     try {
       console.log('Fetching real location for bike:', bikeNumber);
-      const response = await fetch(`http://127.0.0.1:8000/api/latest_location/${tripId}`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/latest_location/${tripId}`, {
         credentials: 'include',
         headers: {
           'Accept': 'application/json'
@@ -79,8 +99,8 @@ const ActiveRides = () => {
       const data = await response.json();
       console.log('Received location data:', data);
 
-      const clampedLat = Math.min(Math.max(data.latitude, ADDIS_BOUNDS.minLat), ADDIS_BOUNDS.maxLat);
-      const clampedLng = Math.min(Math.max(data.longitude, ADDIS_BOUNDS.minLng), ADDIS_BOUNDS.maxLng);
+      const clampedLat = Math.min(Math.max(data.latitude, ADAMA_BOUNDS.minLat), ADAMA_BOUNDS.maxLat);
+      const clampedLng = Math.min(Math.max(data.longitude, ADAMA_BOUNDS.minLng), ADAMA_BOUNDS.maxLng);
 
       return {
         bike_number: bikeNumber,
@@ -100,7 +120,7 @@ const ActiveRides = () => {
     
     const intervalId = setInterval(async () => {
       if (useMockData) {
-        const mockLocation = generateMockLocation(selectedBike.station_id?.toString() || '');
+        const mockLocation = generateMockLocation(selectedBike.station_name || 'default');
         setBikeLocations(prev => ({
           ...prev,
           [selectedBike.bike_number]: mockLocation
@@ -122,7 +142,7 @@ const ActiveRides = () => {
   const fetchActiveBikes = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://127.0.0.1:8000/api/bike/active', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/bike/active', {
         credentials: 'include',
         headers: {
           'Accept': 'application/json'
@@ -191,15 +211,12 @@ const ActiveRides = () => {
   }, [searchTerm, activeBikes]);
 
   const handleBikeSelect = (bike: ActiveBike) => {
-    // if (!bike.station_id) {
-    //   console.error('Selected bike has no station_id:', bike);
-    //   return;
-    // }
-
     setSelectedBike(bike);
     
     if (useMockData) {
-      const mockLocation = generateMockLocation(bike.station_id.toString());
+      console.log('Generating mock location for bike:', bike);
+      const stationId = bike.station_name || 'default';
+      const mockLocation = generateMockLocation(stationId);
       setBikeLocations(prev => ({
         ...prev,
         [bike.bike_number]: mockLocation
@@ -408,7 +425,7 @@ const ActiveRides = () => {
                     selectedStation={selectedBike ? `station-${selectedBike.station_id}` : ""}
                     selectedBike={selectedBike ? `bike-${selectedBike.bike_number}` : ""}
                     onStationSelect={() => {}}
-                    bounds={ADDIS_BOUNDS}
+                    bounds={ADAMA_BOUNDS}
                   />
                 </div>
               </CardContent>

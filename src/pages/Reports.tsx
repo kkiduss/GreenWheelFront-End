@@ -65,7 +65,7 @@ const Reports = () => {
     const fetchMaintenanceReports = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`http://127.0.0.1:8000/api/bike/maintenance?page=${page}&limit=${PAGE_SIZE}`);
+        const response = await fetch(`https://www.green-wheels.pro.et/api/bike/maintenance?page=${page}&limit=${PAGE_SIZE}`);
         if (response.status === 404) {
           // No maintenance endpoint or no data, treat as empty but not error
           setFilteredReports([]);
@@ -335,7 +335,7 @@ const Reports = () => {
                   const id = report.id || report.maintenance_id || '';
                   const bikeId = report.bikeId || report.bike_number || '';
                   const issue = report.issue || report.reason || '';
-                  const reportedAt = report.reportedAt || report.created_at || '';
+                  const reportedAt = report.reportedAt || (report as any).created_at || '';
                   const priority = report.priority || 'unknown';
                   const status = report.status || report.maintenance_status || 'unknown';
                   return (

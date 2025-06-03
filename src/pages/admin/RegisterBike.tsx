@@ -58,7 +58,7 @@ const RegisterBike = () => {
           throw new Error('No authentication token found');
         }
 
-        const response = await fetch('http://127.0.0.1:8000/api/stations', {
+        const response = await fetch('https://www.green-wheels.pro.et/api/stations', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -135,7 +135,7 @@ const RegisterBike = () => {
     if (!bikeToConfirm) return;
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/superadmin/add_bikes', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/superadmin/add_bikes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { ArrowLeft, Mail, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface ForgotPasswordFormData {
@@ -15,7 +15,7 @@ const ForgotPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<ForgotPasswordFormData>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<ForgotPasswordFormData>({
     defaultValues: {
       email: '',
     },
@@ -24,23 +24,27 @@ const ForgotPassword = () => {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     setIsLoading(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/forgot-password', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/password/forgot', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
         body: JSON.stringify(data),
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to send reset email');
+        throw new Error(responseData.message || 'Failed to send reset email');
       }
 
       setEmailSent(true);
+      reset(); // Clear the form
       toast({
         title: 'Reset Email Sent',
         description: 'Please check your email for password reset instructions.',
+        variant: 'default',
       });
     } catch (error: any) {
       toast({
@@ -54,10 +58,10 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4 py-8">
+      <div className="max-w-md w-full space-y-6 bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow-lg">
         <div className="text-center">
-          <h2 className="mt-6 text-3xl font-bold text-gray-900 dark:text-white">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
             Forgot Password
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
@@ -66,9 +70,9 @@ const ForgotPassword = () => {
         </div>
 
         {!emailSent ? (
-          <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
-              <label htmlFor="email" className="sr-only">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email address
               </label>
               <div className="relative">
@@ -83,7 +87,8 @@ const ForgotPassword = () => {
                     },
                   })}
                   placeholder="Enter your email"
-                  className="dark:bg-gray-800 dark:border-gray-700 dark:text-white"
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                  disabled={isLoading}
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
@@ -99,7 +104,7 @@ const ForgotPassword = () => {
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2" />
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Sending...
                   </div>
                 ) : (
@@ -131,7 +136,7 @@ const ForgotPassword = () => {
           </div>
         )}
 
-        <div className="text-center">
+        <div className="text-center pt-4 border-t border-gray-200 dark:border-gray-700">
           <Link
             to="/login"
             className="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"

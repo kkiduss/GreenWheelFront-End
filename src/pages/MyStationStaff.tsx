@@ -7,19 +7,32 @@ import { Button } from '@/components/ui/button';
 import { Search, Users, Wrench, Loader2 } from 'lucide-react';
 
 interface StaffMember {
-  id: string;
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  role: string;
+  station_id: number;
+  status: string;
+  national_id_number: string;
+}
+
+interface DisplayStaffMember {
+  id: number;
   name: string;
   email: string;
+  phone: string;
   role: string;
   national_id: string;
-  join_date: string;
-  station_name: string;
+  status: string;
+  station_id: number;
 }
 
 const MyStationStaff = () => {
   const { authState } = useAuth();
   const { toast } = useToast();
-  const [staff, setStaff] = useState<StaffMember[]>([]);
+  const [staff, setStaff] = useState<DisplayStaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
@@ -28,18 +41,17 @@ const MyStationStaff = () => {
   const ITEMS_PER_PAGE = 10;
 
   useEffect(() => {
-    const fetchStationStaff = async () => {
+    const fetchStationData = async () => {
       try {
         setLoading(true);
         setError(null);
-        // Get stationId from localStorage
         const stationIdRaw = localStorage.getItem('stationId');
         const stationId = stationIdRaw ? parseInt(stationIdRaw, 10) : null;
         let token = authState.token;
         if (!token) {
           token = localStorage.getItem('token');
         }
-        console.log('[MyStationStaff] Fetching staff for station:', stationId, 'with token:', token);
+
         if (!stationId) {
           setError('No station ID found in localStorage.');
           setLoading(false);
@@ -50,40 +62,43 @@ const MyStationStaff = () => {
           setLoading(false);
           return;
         }
-        const response = await fetch(`http://127.0.0.1:8000/api/superadmin/team/station/${stationId}`, {
+
+        // Fetch staff data
+        const staffResponse = await fetch(`https://www.green-wheels.pro.et/api/admin/team/station/${stationId}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Accept': 'application/json',
           },
         });
 
-        if (!response.ok) {
+        if (!staffResponse.ok) {
           throw new Error('Failed to fetch station staff');
         }
 
-        const data = await response.json();
-        const staffData = Array.isArray(data.data) ? data.data : data;
+        const staffData = await staffResponse.json();
+        const staffArray = Array.isArray(staffData.team) ? staffData.team : [];
 
-        // No need to filter by station_id, API already does it
-        const stationStaff = staffData
-          .filter((member: any) => member.role === 'staff' || member.role === 'maintenance')
-          .map((member: any) => ({
-            id: member.id?.toString() ?? member.email,
-            name: `${member.first_name || ''} ${member.last_name || ''}`.trim(),
+        // Map staff data
+        const stationStaff = staffArray
+          .filter((member: StaffMember) => member.role === 'staff' || member.role === 'maintenance')
+          .map((member: StaffMember): DisplayStaffMember => ({
+            id: member.id,
+            name: `${member.first_name} ${member.last_name}`,
             email: member.email,
+            phone: member.phone,
             role: member.role,
-            national_id: member.National_ID_number || member.national_id || 'N/A',
-            join_date: member.join_date || member.created_at || 'N/A',
-            station_name: member.station_name || 'Unknown Station',
+            national_id: member.national_id_number,
+            status: member.status,
+            station_id: member.station_id
           }));
 
         setStaff(stationStaff);
       } catch (err) {
-        console.error('Error fetching station staff:', err);
-        setError('Failed to load station staff. Please try again.');
+        console.error('Error fetching station data:', err);
+        setError('Failed to load station data. Please try again.');
         toast({
           title: 'Error',
-          description: 'Failed to load station staff',
+          description: 'Failed to load station data',
           variant: 'destructive',
         });
       } finally {
@@ -91,7 +106,7 @@ const MyStationStaff = () => {
       }
     };
 
-    fetchStationStaff();
+    fetchStationData();
   }, [authState.token, toast]);
 
   const filteredStaff = staff.filter(member =>
@@ -182,8 +197,8 @@ const MyStationStaff = () => {
                 <tr className="border-b dark:border-gray-700">
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Name</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Role</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Email</th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Join Date</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Contact</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Status</th>
                 </tr>
               </thead>
               <tbody>
@@ -203,7 +218,7 @@ const MyStationStaff = () => {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">My Station Team</h1>
+        <h1 className="text-2xl font-bold">My Station</h1>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -264,8 +279,8 @@ const MyStationStaff = () => {
               <tr className="border-b dark:border-gray-700">
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Name</th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Role</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Email</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Join Date</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-500 dark:text-gray-400">Contact</th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Status</th>
               </tr>
             </thead>
             <tbody>
@@ -286,9 +301,19 @@ const MyStationStaff = () => {
                         {member.role}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm">{member.email}</td>
-                    <td className="px-4 py-3 text-sm">
-                      {member.join_date || '—'}
+                    <td className="px-4 py-3">
+                      <div className="text-sm">{member.email}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">{member.phone}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+                        ${member.status === 'verified' 
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                          : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                        }`}
+                      >
+                        {member.status}
+                      </span>
                     </td>
                   </tr>
                 ))

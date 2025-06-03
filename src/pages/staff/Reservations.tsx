@@ -20,7 +20,7 @@ const Reservations = () => {
   useEffect(() => {
     const fetchReservations = async () => {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/bikes/1/reserved', {
+        const response = await fetch('https://www.green-wheels.pro.et/api/bikes/1/reserved', {
           credentials: 'include',
           headers: {
             'Accept': 'application/json',

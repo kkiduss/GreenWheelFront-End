@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       console.log('Attempting login...');
       // Send login request to the backend
-      const response = await axios.post('http://127.0.0.1:8000/api/login', { ep, password }, { withCredentials: true });
+      const response = await axios.post('https://www.green-wheels.pro.et/api/login', { ep, password }, { withCredentials: true });
       console.log('Login response:', response.data);
 
       // Destructure the response to get role and token

@@ -34,7 +34,7 @@ const StationManagement = () => {
     const fetchStations = async () => {
       try {
         console.log('Fetching stations...');
-        const response = await fetch('http://127.0.0.1:8000/api/stations', {
+        const response = await fetch('https://www.green-wheels.pro.et/api/stations', {
           headers: {
             'Authorization': `Bearer ${authState.token}`,
             'Accept': 'application/json',
@@ -99,7 +99,7 @@ const StationManagement = () => {
         setBikesLoading(true);
         try {
           console.log('Fetching bikes for station:', selectedStation.name);
-          const response = await fetch(`http://127.0.0.1:8000/api/stations/${selectedStation.id}/bikes`, {
+          const response = await fetch(`https://www.green-wheels.pro.et/api/stations/${selectedStation.id}/bikes`, {
             headers: {
               'Authorization': `Bearer ${authState.token}`,
               'Accept': 'application/json',
@@ -210,7 +210,7 @@ const StationManagement = () => {
     if (!selectedStation) return;
     
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/superadmin/update_station/${selectedStation.id}`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/superadmin/update_station/${selectedStation.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

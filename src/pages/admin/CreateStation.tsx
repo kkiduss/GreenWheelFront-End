@@ -47,7 +47,7 @@ const CreateStation = () => {
 
     try {
       // Make an API call to create the station
-      const response = await fetch('http://127.0.0.1:8000/api/superadmin/add_stations', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/superadmin/add_stations', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

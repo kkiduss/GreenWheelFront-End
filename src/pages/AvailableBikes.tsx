@@ -52,7 +52,7 @@ const AvailableBikes = () => {
           throw new Error('No station ID found for user');
         }
         console.log(`Fetching bikes for ${authState.role} user from station ${stationId}`);
-        response = await fetch(`http://127.0.0.1:8000/api/bikes/${stationId}/available`, {
+        response = await fetch(`https://www.green-wheels.pro.et/api/bikes/${stationId}/available`, {
           credentials: 'include',
           headers: { 
             'Accept': 'application/json',
@@ -61,7 +61,7 @@ const AvailableBikes = () => {
         });
       } else {
         // For regular users: fetch all available bikes
-        response = await fetch('http://127.0.0.1:8000/api/bike/available', {
+        response = await fetch('https://www.green-wheels.pro.et/api/bike/available', {
           credentials: 'include',
           headers: { 
             'Accept': 'application/json',

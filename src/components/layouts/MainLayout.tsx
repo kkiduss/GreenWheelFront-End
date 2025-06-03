@@ -74,7 +74,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       return [
         { name: 'Dashboard', path: '/admin-dashboard', icon: <LayoutDashboard size={20} /> },
         { name: 'All Users', path: '/superadmin/users', icon: <Users size={20} /> },
-        { name: 'User Management', path: '/user-management', icon: <UserCheck size={20} /> },
+        { name: 'Teams', path: '/user-management', icon: <UserCheck size={20} /> },
         { name: 'Bike Fleet', path: '/bike-fleet', icon: <Bike size={20} /> },
         { name: 'Stations', path: '/station-management', icon: <MapPin size={20} /> },
         { name: 'User Verification', path: '/user-verification', icon: <UserCheck size={20} /> },

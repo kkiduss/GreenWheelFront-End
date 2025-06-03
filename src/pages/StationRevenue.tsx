@@ -27,7 +27,7 @@ const StationRevenue = () => {
   const fetchRevenueData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://127.0.0.1:8000/api/station-revenue', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/station-revenue', {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',

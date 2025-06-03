@@ -23,7 +23,7 @@ const EditProfile = () => {
 
   useEffect(() => {
     // Fetch user profile data
-    fetch('http://127.0.0.1:8000/api/user/profile', {
+    fetch('https://www.green-wheels.pro.et/api/user/profile', {
       credentials: 'include',
       headers: {
         'Accept': 'application/json',
@@ -55,7 +55,7 @@ const EditProfile = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/update-profile/${authState.user?.id}`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/update-profile/${authState.user?.id}`, {
         method: 'PUT',
         credentials: 'include',
         headers: {

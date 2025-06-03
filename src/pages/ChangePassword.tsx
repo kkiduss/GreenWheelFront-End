@@ -43,27 +43,38 @@ const ChangePassword = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(
-        'http://127.0.0.1:8000/api/change-password',
+      const response = await axios.put(
+        'https://www.green-wheels.pro.et/api/change-password',
         {
-          current_password: currentPassword,
+          old_password: currentPassword,
           new_password: newPassword,
+          new_password_confirmation: confirmPassword
         },
         {
           withCredentials: true,
           headers: {
             'Accept': 'application/json',
+            'Content-Type': 'application/json',
           },
         }
       );
 
       if (response.data.success) {
         toast({
-          title: response.data.message || 'Password changed successfully',
-          description: response.data.description || 'Your password has been updated',
+          title: 'Password Changed Successfully',
+          description: 'Your password has been updated. You will be redirected back.',
           variant: 'default',
         });
-        navigate(-1); // Go back to previous page
+        
+        // Clear the form
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        
+        // Wait a moment before redirecting
+        setTimeout(() => {
+          navigate(-1);
+        }, 2000);
       }
     } catch (error: any) {
       const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Please check your current password and try again';

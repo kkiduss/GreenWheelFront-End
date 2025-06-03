@@ -65,7 +65,7 @@ export function AppSidebar() {
               </SidebarItem>
               <SidebarItem 
                 icon={<UserCheck size={18} />} 
-                title="User Management"
+                title="Teams"
                 active={isActive('/user-management')}
                 href="/user-management"
               >

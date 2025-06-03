@@ -52,7 +52,7 @@ const UserVerification = () => {
   const fetchVerificationRequests = async () => {
     try {
       console.log('Fetching verification requests...');
-      const response = await fetch('http://127.0.0.1:8000/api/inprogress-ids', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/inprogress-ids', {
         method: 'GET',
         credentials: 'include',
         headers: {
@@ -141,7 +141,7 @@ const UserVerification = () => {
 
       console.log(`Handling verification for ID ${requestId} with action ${action}`);
 
-      const response = await fetch(`http://127.0.0.1:8000/api/superadmin/verify_id/${requestId}`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/superadmin/verify_id/${requestId}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -209,7 +209,7 @@ const UserVerification = () => {
         isAuthenticated: authState.isAuthenticated
       });
 
-      const response = await fetch(`http://127.0.0.1:8000/api/superadmin/reject_id/${rejectionDialog.requestId}`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/superadmin/reject_id/${rejectionDialog.requestId}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -320,50 +320,52 @@ const UserVerification = () => {
   };
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6 p-2 sm:p-6">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div className="flex items-center gap-2">
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => navigate(-1)}
-            className="mr-2"
+            className="mr-1 sm:mr-2"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </Button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-graydark dark:text-white">User Verification</h1>
-            <p className="text-sm sm:text-base text-muted-foreground dark:text-gray-300">
+            <h1 className="text-lg sm:text-2xl font-bold text-graydark dark:text-white">User Verification</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground dark:text-gray-300">
               Review and verify user identity documents
             </p>
           </div>
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-graydark dark:text-white">Verification Requests</h2>
+        <div className="p-3 sm:p-4 border-b border-gray-100 dark:border-gray-700">
+          <h2 className="text-base sm:text-lg font-semibold text-graydark dark:text-white">Verification Requests</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
             <thead className="bg-gray-50 dark:bg-gray-900">
               <tr>
-                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
                   Name
                 </th>
-                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
                   National ID
                 </th>
-                <th className="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
+                <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
                   Submitted On
                 </th>
-                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
                   ID Images
                 </th>
-                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
+                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-graydark dark:text-gray-300 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -378,22 +380,22 @@ const UserVerification = () => {
 
                   return (
                     <tr key={`verification-${request.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-graydark dark:text-white">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-graydark dark:text-white">
                         {request.first_name} {request.last_name}
                       </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-graydark dark:text-white">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-graydark dark:text-white">
                         {request.national_id_number}
                       </td>
-                      <td className="hidden sm:table-cell px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-graydark dark:text-white">
+                      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap text-sm text-graydark dark:text-white">
                         {new Date(request.created_at).toLocaleDateString()}
                       </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                         <div className="flex flex-col sm:flex-row gap-2">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => showImage(request.national_id_front, 'front')}
-                            className="w-full sm:w-auto"
+                            className="w-full sm:w-auto text-xs sm:text-sm"
                           >
                             Front
                           </Button>
@@ -401,13 +403,13 @@ const UserVerification = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => showImage(request.national_id_back, 'back')}
-                            className="w-full sm:w-auto"
+                            className="w-full sm:w-auto text-xs sm:text-sm"
                           >
                             Back
                           </Button>
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                           request.status === 'Inprogress' 
                             ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
@@ -418,25 +420,25 @@ const UserVerification = () => {
                           {request.status}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm">
                         {request.status === 'Inprogress' && (
                           <div className="flex flex-col sm:flex-row gap-2">
                             <Button
                               variant="default"
                               size="sm"
                               onClick={() => handleVerification(request.id, 'accept')}
-                              className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+                              className="bg-primary hover:bg-primary/90 w-full sm:w-auto text-xs sm:text-sm"
                             >
-                              <Check className="h-4 w-4 mr-1" />
+                              <Check className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                               Accept
                             </Button>
                             <Button
                               variant="destructive"
                               size="sm"
                               onClick={() => handleVerification(request.id, 'reject')}
-                              className="w-full sm:w-auto"
+                              className="w-full sm:w-auto text-xs sm:text-sm"
                             >
-                              <X className="h-4 w-4 mr-1" />
+                              <X className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                               Reject
                             </Button>
                           </div>
@@ -447,10 +449,10 @@ const UserVerification = () => {
                 }).filter(Boolean)
               ) : (
                 <tr key="no-data">
-                  <td colSpan={6} className="px-4 sm:px-6 py-8 text-center text-gray-500 dark:text-gray-400">
+                  <td colSpan={6} className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500 dark:text-gray-400">
                     <div className="flex flex-col items-center">
-                      <UserCheck size={32} className="text-gray-300 mb-2" />
-                      <p>No verification requests at the moment</p>
+                      <UserCheck className="h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mb-2" />
+                      <p className="text-sm sm:text-base">No verification requests at the moment</p>
                     </div>
                   </td>
                 </tr>
@@ -467,19 +469,19 @@ const UserVerification = () => {
           setRejectionReason('');
         }
       }}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Reject Verification Request</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg sm:text-xl">Reject Verification Request</DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
               Please provide a reason for rejecting this verification request.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
+          <div className="py-3 sm:py-4">
             <Textarea
               placeholder="Enter rejection reason..."
               value={rejectionReason}
               onChange={(e) => setRejectionReason(e.target.value)}
-              className="min-h-[100px] w-full"
+              className="min-h-[100px] w-full text-sm sm:text-base"
             />
           </div>
           <DialogFooter className="flex flex-col sm:flex-row gap-2">
@@ -489,7 +491,7 @@ const UserVerification = () => {
                 setRejectionDialog({ open: false, requestId: null });
                 setRejectionReason('');
               }}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-sm sm:text-base"
             >
               Cancel
             </Button>
@@ -497,7 +499,7 @@ const UserVerification = () => {
               variant="destructive"
               onClick={handleRejection}
               disabled={!rejectionReason.trim()}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto text-sm sm:text-base"
             >
               Reject
             </Button>
@@ -507,18 +509,19 @@ const UserVerification = () => {
 
       {/* Image Preview Modal */}
       {selectedImage && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg max-w-2xl w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold dark:text-white">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-lg max-w-2xl w-full mx-2 sm:mx-4">
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold dark:text-white">
                 National ID {selectedImage.type === 'front' ? 'Front' : 'Back'}
               </h3>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setSelectedImage(null)}
+                className="h-8 w-8 sm:h-10 sm:w-10"
               >
-                <X size={20} />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </Button>
             </div>
             <div className="relative aspect-[16/9] w-full">

@@ -70,7 +70,7 @@ const RegisterUser = () => {
           throw new Error('No authentication token found');
         }
 
-        const response = await fetch('http://127.0.0.1:8000/api/stations', {
+        const response = await fetch('https://www.green-wheels.pro.et/api/stations', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -168,7 +168,7 @@ const RegisterUser = () => {
       }
 
       const token = localStorage.getItem('token');
-      const response = await fetch('http://127.0.0.1:8000/api/superadmin/add_station_admins', {
+      const response = await fetch('https://www.green-wheels.pro.et/api/superadmin/add_station_admins', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

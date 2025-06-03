@@ -55,7 +55,7 @@ const MaintenanceDashboard = ({ reportSource, initialReports = [], loading = fal
 
   useEffect(() => {
     // Fetch maintenance reports from backend
-    fetch('http://127.0.0.1:8000/api/bike/maintenance', {
+    fetch('https://www.green-wheels.pro.et/api/bike/maintenance', {
       credentials: 'include',
       headers: { 'Accept': 'application/json' },
     })
@@ -175,7 +175,7 @@ const MaintenanceDashboard = ({ reportSource, initialReports = [], loading = fal
       return;
     }
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/maintenance/resolve-issue/${maintenanceId}?id=${reportId}`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/maintenance/resolve-issue/${maintenanceId}?id=${reportId}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -267,7 +267,7 @@ const MaintenanceDashboard = ({ reportSource, initialReports = [], loading = fal
     const aproduct = report.maintenance_id; // Use the backend maintenance_id as 'aproduct'
     console.log('Starting work for aproduct (backend maintenance_id):', aproduct);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/maintenance/under-review/${aproduct}`, {
+      const response = await fetch(`https://www.green-wheels.pro.et/api/maintenance/under-review/${aproduct}`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -539,7 +539,7 @@ const MaintenanceDashboard = ({ reportSource, initialReports = [], loading = fal
             }}
             onConfirm={async () => {
               try {
-                const response = await fetch('http://127.0.0.1:8000/api/maintenance/add_issue_type', {
+                const response = await fetch('https://www.green-wheels.pro.et/api/maintenance/add_issue_type', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',

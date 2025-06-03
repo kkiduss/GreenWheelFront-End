@@ -62,7 +62,7 @@ const RegisterStationStaff = () => {
           throw new Error('No authentication token found');
         }
 
-        const response = await fetch('http://127.0.0.1:8000/api/stations', {
+        const response = await fetch('https://www.green-wheels.pro.et/api/stations', {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -207,8 +207,8 @@ const RegisterStationStaff = () => {
 
       // Choose endpoint based on role
       const apiUrl = staffToConfirm.role === 'staff' 
-        ? 'http://127.0.0.1:8000/api/admin/add_staff'
-        : 'http://127.0.0.1:8000/api/admin/add_maintenance';
+        ? 'https://www.green-wheels.pro.et/api/admin/add_staff'
+        : 'https://www.green-wheels.pro.et/api/admin/add_maintenance';
 
       // Set a shorter timeout (15 seconds instead of 30)
       const controller = new AbortController();
